@@ -4,8 +4,6 @@ Train a diffusion model on images.
 import sys
 import argparse
 
-from guided_diffusion.msmri_dataset_mose import msmri_Dataloader
-
 sys.path.append("..")
 sys.path.append(".")
 from guided_diffusion import dist_util, logger
@@ -14,6 +12,7 @@ from torch.utils.data.sampler import SubsetRandomSampler
 # from guided_diffusion.bratsloader import BRATSDataset
 from guided_diffusion.lidcloader import LIDCDataset
 from guided_diffusion.lidcloader_mose import lidc_Dataloader
+from guided_diffusion.msmri_dataset_mose import msmri_Dataloader
 from guided_diffusion.script_util import (
     model_and_diffusion_defaults,
     create_model_and_diffusion,
@@ -192,8 +191,8 @@ if __name__ == "__main__":
             ).train_ds
         elif use_dataset == "msmri":
             ds = msmri_Dataloader(
-                # data_folder="/storage/homefs/lz20w714/git/mose-auseg/data/msmri_npy",
-                data_folder="/home/lukas/git/mose-auseg/data/msmri_npy",
+                data_folder="/storage/homefs/lz20w714/git/mose-auseg/data/msmri_npy",
+                # data_folder="/home/lukas/git/mose-auseg/data/msmri_npy",
                 transform_train=None,
                 transform_test=None
             ).train_ds
