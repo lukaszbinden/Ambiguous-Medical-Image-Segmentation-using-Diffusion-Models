@@ -571,9 +571,9 @@ class GaussianDiffusion:
         else:
            for i in indices:
                 t = th.tensor([i] * shape[0], device=device)
-                if i%100==0:
-                    print('sampling step', i)
-                    viz.image(visualize(img.cpu()[0, -1,...]), opts=dict(caption="sample"+ str(i) ))
+                # if i%100==0:
+                #     print('sampling step', i)
+                #     viz.image(visualize(img.cpu()[0, -1,...]), opts=dict(caption="sample"+ str(i) ))
 
                 with th.no_grad():
                     if img.shape != (1, 5, 128, 128):

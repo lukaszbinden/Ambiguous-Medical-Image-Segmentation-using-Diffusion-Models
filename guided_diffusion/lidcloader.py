@@ -62,12 +62,11 @@ class LIDCDataset(torch.utils.data.Dataset):
             image = torch.unsqueeze(image, 0)
             # concatenating images 4 times is not necessary for LIDC dataset, but for MRI we concatenated all of them (flair, f1, f2, pd). This is for reference! :D
             image = torch.cat((image,image,image,image), 0)
-            label = out[random.randint(1, 4)]
-            label = torch.unsqueeze(label, 0)
-  
-            
-            
-            return (image, label, path)
+            # label = out[random.randint(1, 4)]
+            label = out[1:5]
+            # label = torch.unsqueeze(label, 0)
+
+            return image, label  # , path
         else:
 
             image = out[0]
