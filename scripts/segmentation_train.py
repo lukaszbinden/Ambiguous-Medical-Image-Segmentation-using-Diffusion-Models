@@ -162,7 +162,14 @@ if __name__ == "__main__":
     args = create_argparser().parse_args()
 
     dist_util.setup_dist()
-    logger.configure()
+
+    use_mose_dataset = True
+    use_dataset = "msmri"  # "msmri" or "lidc"
+
+    if use_mose_dataset:
+        logger.configure(dir="./results/" + use_dataset)
+    else:
+        logger.configure()
 
     logger.log("creating model, diffusion, prior and posterior distribution...")
     model, diffusion, prior, posterior = create_model_and_diffusion(
@@ -172,8 +179,7 @@ if __name__ == "__main__":
     schedule_sampler = create_named_schedule_sampler(args.schedule_sampler, diffusion,  maxt=1000)
 
     logger.log("creating data loader...")
-    use_mose_dataset = True
-    use_dataset = "msmri"  # "msmri" or "lidc"
+
     if not use_mose_dataset:
         ds = LIDCDataset(args.data_dir, test_flag=False)
     else:
