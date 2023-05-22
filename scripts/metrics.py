@@ -26,8 +26,8 @@ def calc_batched_generalised_energy_distance(samples_dist_0, samples_dist_1, num
 
     eye = np.eye(num_classes)
 
-    samples_dist_0 = eye[samples_dist_0].astype(np.bool)
-    samples_dist_1 = eye[samples_dist_1].astype(np.bool)
+    samples_dist_0 = eye[samples_dist_0].astype(bool)
+    samples_dist_1 = eye[samples_dist_1].astype(bool)
 
     cross = np.mean(batched_distance(samples_dist_0, samples_dist_1), axis=(1, 2))
     diversity_0 = np.mean(batched_distance(samples_dist_0, samples_dist_0), axis=(1, 2))
