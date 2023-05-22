@@ -3,7 +3,7 @@ import torch.nn
 import numpy as np
 import os
 import os.path
-import nibabel
+# import nibabel
 import torch as th
 from skimage import io
 import random
@@ -60,7 +60,8 @@ class LIDCDataset(torch.utils.data.Dataset):
         if self.test_flag:
             image = out[0]
             image = torch.unsqueeze(image, 0)
-            image = torch.cat((image,image,image,image), 0) #concatenating images 4 times is not necessary for LIDC dataset, but for MRI we concatenated all of them (flair, f1, f2, pd). This is for reference! :D
+            # concatenating images 4 times is not necessary for LIDC dataset, but for MRI we concatenated all of them (flair, f1, f2, pd). This is for reference! :D
+            image = torch.cat((image,image,image,image), 0)
             label = out[random.randint(1, 4)]
             label = torch.unsqueeze(label, 0)
   

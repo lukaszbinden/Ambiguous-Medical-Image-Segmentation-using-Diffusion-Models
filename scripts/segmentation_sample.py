@@ -17,7 +17,7 @@ import time
 import torch as th
 import torch.distributed as dist
 from guided_diffusion import dist_util, logger
-from guided_diffusion.bratsloader import BRATSDataset
+# from guided_diffusion.bratsloader import BRATSDataset
 from guided_diffusion.lidcloader import LIDCDataset
 from guided_diffusion.script_util import (
     NUM_CLASSES,

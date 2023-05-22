@@ -8,7 +8,7 @@ sys.path.append(".")
 from guided_diffusion import dist_util, logger
 from guided_diffusion.resample import create_named_schedule_sampler
 from torch.utils.data.sampler import SubsetRandomSampler
-from guided_diffusion.bratsloader import BRATSDataset
+# from guided_diffusion.bratsloader import BRATSDataset
 from guided_diffusion.lidcloader import LIDCDataset
 from guided_diffusion.script_util import (
     model_and_diffusion_defaults,
@@ -33,7 +33,7 @@ sys.path.append(".")
 from guided_diffusion import dist_util, logger
 from guided_diffusion.resample import create_named_schedule_sampler
 from torch.utils.data.sampler import SubsetRandomSampler
-from guided_diffusion.bratsloader import BRATSDataset
+# from guided_diffusion.bratsloader import BRATSDataset
 from guided_diffusion.lidcloader import LIDCDataset
 from guided_diffusion.script_util import (
     model_and_diffusion_defaults,
@@ -51,7 +51,7 @@ def main():
     
     world_size = args.ngpu
 
-    os.environ['CUDA_VISIBLE_DEVICES'] = "3,5"
+    os.environ['CUDA_VISIBLE_DEVICES'] = "0"
     os.environ["MASTER_PORT"] = str(1028)
     
     torch.distributed.init_process_group(
@@ -153,7 +153,7 @@ def create_argparser():
 
 
 if __name__ == "__main__":
-    main()
+    # main()
 
     args = create_argparser().parse_args()
 
