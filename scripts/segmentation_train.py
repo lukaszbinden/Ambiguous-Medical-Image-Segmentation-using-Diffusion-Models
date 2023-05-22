@@ -3,6 +3,9 @@ Train a diffusion model on images.
 """
 import sys
 import argparse
+
+from guided_diffusion.msmri_dataset_mose import msmri_Dataloader
+
 sys.path.append("..")
 sys.path.append(".")
 from guided_diffusion import dist_util, logger
@@ -170,15 +173,26 @@ if __name__ == "__main__":
 
     logger.log("creating data loader...")
     use_mose_dataset = True
+    use_dataset = "msmri"  # "msmri" or "lidc"
     if not use_mose_dataset:
         ds = LIDCDataset(args.data_dir, test_flag=False)
     else:
-        ds = lidc_Dataloader(
-            # data_folder="/storage/homefs/lz20w714/git/mose-auseg/data/lidc_npy",
-            data_folder="/home/lukas/git/mose-auseg/data/lidc_npy",
-            transform_train=None,
-            transform_test=None
-        ).train_ds
+        if use_dataset == "lidc":
+            ds = lidc_Dataloader(
+                # data_folder="/storage/homefs/lz20w714/git/mose-auseg/data/lidc_npy",
+                data_folder="/home/lukas/git/mose-auseg/data/lidc_npy",
+                transform_train=None,
+                transform_test=None
+            ).train_ds
+        elif use_dataset == "msmri":
+            ds = msmri_Dataloader(
+                # data_folder="/storage/homefs/lz20w714/git/mose-auseg/data/msmri_npy",
+                data_folder="/home/lukas/git/mose-auseg/data/msmri_npy",
+                transform_train=None,
+                transform_test=None
+            ).train_ds
+        else:
+            assert False, "unknown dataset"
 
     # ds.__getitem__(23)
 
