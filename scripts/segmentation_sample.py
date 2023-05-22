@@ -12,7 +12,7 @@ import nibabel as nib
 import sys
 import random
 
-from scripts.metrics import calc_batched_generalised_energy_distance
+from metrics import calc_batched_generalised_energy_distance
 
 sys.path.append(".")
 import numpy as np
