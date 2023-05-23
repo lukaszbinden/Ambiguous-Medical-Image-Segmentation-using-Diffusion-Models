@@ -49,6 +49,10 @@ def dice_score(pred, targs):
     return 2. * (pred * targs).sum() / (pred + targs).sum()
 
 
+def expanduservars(path: str) -> str:
+    return os.path.expanduser(os.path.expandvars(path))
+
+
 def main():
     # args = create_argparser().parse_args()
     args = create_argparser().parse_args()
@@ -70,7 +74,10 @@ def main():
     use_dataset = "lidc"  # "msmri" or "lidc"
 
     if use_mose_dataset:
-        logger.configure(dir="./results/" + use_dataset)
+        this_run = expanduservars("eval_${NOW}")
+        out_dir = "./results/" + use_dataset + "/" + this_run
+        logger.configure(dir=out_dir)
+        logger.info(f"Log dir: {out_dir}")
     else:
         logger.configure()
 
@@ -211,10 +218,9 @@ def main():
         hm_iou = batched_hungarian_matching(hm_labels, predictions, NUM_CLASSES)
         hm_ious += np.sum(hm_iou)
         num_imgs += b.shape[0]
-        print("Batch %d/%d (%d/%d) | GED_%d: %.4g, HM-IoU_%d: %.4g" % (
-        idx + 1, data_len, num_imgs, len_dataset, args.num_ensemble, np.sum(ged), args.num_ensemble, np.sum(hm_iou)))
+        logger.info("Batch %d/%d (%d/%d) | GED_%d: %.4g, HM-IoU_%d: %.4g" % (idx + 1, data_len, num_imgs, len_dataset, args.num_ensemble, np.sum(ged), args.num_ensemble, np.sum(hm_iou)))
 
-    print("\n\nGED_%d: %.4g | HM-IoU_%d: %.4g" % (args.num_ensemble, geds / len_dataset, args.num_ensemble, hm_ious / len_dataset))
+    logger.info("\n\nGED_%d: %.4g | HM-IoU_%d: %.4g" % (args.num_ensemble, geds / len_dataset, args.num_ensemble, hm_ious / len_dataset))
 
 
 def create_argparser():

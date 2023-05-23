@@ -2,6 +2,7 @@
 Train a diffusion model on images.
 """
 import sys
+import os
 import argparse
 
 sys.path.append("..")
@@ -131,6 +132,9 @@ viz = Visdom(port=8097)
 #         lr_anneal_steps=args.lr_anneal_steps,
 #     ).run_loop()
 
+def expanduservars(path: str) -> str:
+    return os.path.expanduser(os.path.expandvars(path))
+
 
 def create_argparser():
     defaults = dict(
@@ -167,7 +171,10 @@ if __name__ == "__main__":
     use_dataset = "lidc"  # "msmri" or "lidc"
 
     if use_mose_dataset:
-        logger.configure(dir="./results/" + use_dataset)
+        this_run = expanduservars("train_${NOW}")
+        out_dir = "./results/" + use_dataset + "/" + this_run
+        logger.configure(dir=out_dir)
+        logger.info(f"Log dir: {out_dir}")
     else:
         logger.configure()
 
@@ -187,8 +194,8 @@ if __name__ == "__main__":
     else:
         if use_dataset == "lidc":
             ds = lidc_Dataloader(
-                # data_folder="/storage/homefs/lz20w714/git/mose-auseg/data/lidc_npy",
-                data_folder="/home/lukas/git/mose-auseg/data/lidc_npy",
+                data_folder="/storage/homefs/lz20w714/git/mose-auseg/data/lidc_npy",
+                # data_folder="/home/lukas/git/mose-auseg/data/lidc_npy",
                 transform_train=None,
                 transform_test=None
             ).train_ds

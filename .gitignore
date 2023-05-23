@@ -210,3 +210,5 @@ cython_debug/
 
 .idea/
 guided_diffusion/__pycache__/
+
+results/
