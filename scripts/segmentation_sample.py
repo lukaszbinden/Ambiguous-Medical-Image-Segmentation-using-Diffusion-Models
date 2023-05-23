@@ -109,6 +109,8 @@ def main():
         else:
             assert False, "unknown dataset"
 
+    logger.info("Arguments: %s" % args.__dict__)
+
     # sampler = torch.utils.data.distributed.DistributedSampler(
     # ds,
     # num_replicas=args.ngpu,
@@ -131,7 +133,7 @@ def main():
     img_cnt = 0
     geds = []
     hm_ious = []
-    assert args.batch_size == 1, f"cf. gaussian_diffusion.py: L579"
+    # assert args.batch_size == 1, f"cf. gaussian_diffusion.py: L579"
     data_len = len(data)
     # while img_cnt < data_len:
     #     img_cnt += 1
