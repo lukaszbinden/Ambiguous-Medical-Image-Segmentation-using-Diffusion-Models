@@ -94,8 +94,8 @@ def main():
     else:
         if use_dataset == "lidc":
             ds = lidc_Dataloader(
-                # data_folder="/storage/homefs/lz20w714/git/mose-auseg/data/lidc_npy",
-                data_folder="/home/lukas/git/mose-auseg/data/lidc_npy",
+                data_folder="/storage/homefs/lz20w714/git/mose-auseg/data/lidc_npy",
+                # data_folder="/home/lukas/git/mose-auseg/data/lidc_npy",
                 transform_train=None,
                 transform_test=None
             ).test_ds
@@ -206,6 +206,10 @@ def main():
         hm_iou = batched_hungarian_matching(hm_labels, predictions, NUM_CLASSES)
         hm_ious.append(np.sum(hm_iou))
         print("Sample %d/%d | GED_%d: %.4g, HM-IoU_%d: %.4g" % (idx + 1, data_len, args.num_ensemble, np.sum(ged), args.num_ensemble, np.sum(hm_iou)))
+
+    final_ged_not_fixed = True
+    if final_ged_not_fixed:
+        raise Exception("GED /hm-iou not fixed yet cf v2")
 
     print("\n\nGED_%d: %.4g | HM-IoU_%d: %.4g" % (args.num_ensemble, np.mean(geds), args.num_ensemble, np.mean(hm_ious)))
 

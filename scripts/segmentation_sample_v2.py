@@ -94,8 +94,8 @@ def main():
     else:
         if use_dataset == "lidc":
             ds = lidc_Dataloader(
-                # data_folder="/storage/homefs/lz20w714/git/mose-auseg/data/lidc_npy",
-                data_folder="/home/lukas/git/mose-auseg/data/lidc_npy",
+                data_folder="/storage/homefs/lz20w714/git/mose-auseg/data/lidc_npy",
+                # data_folder="/home/lukas/git/mose-auseg/data/lidc_npy",
                 transform_train=None,
                 transform_test=None
             ).test_ds
