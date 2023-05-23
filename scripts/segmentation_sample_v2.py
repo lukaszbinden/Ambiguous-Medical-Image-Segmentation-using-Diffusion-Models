@@ -121,7 +121,7 @@ def main():
         ds,
         batch_size=args.batch_size,
         shuffle=False)
-    len_dataset = len(datal)
+    len_dataset = len(ds)
     data = iter(datal)
     all_images = []
     model.load_state_dict(
