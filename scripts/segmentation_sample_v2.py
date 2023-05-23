@@ -121,6 +121,7 @@ def main():
         ds,
         batch_size=args.batch_size,
         shuffle=False)
+    len_dataset = len(datal)
     data = iter(datal)
     all_images = []
     model.load_state_dict(
@@ -131,8 +132,8 @@ def main():
         model.convert_to_fp16()
     model.eval()
     img_cnt = 0
-    geds = []
-    hm_ious = []
+    geds = 0
+    hm_ious = 0
     # assert args.batch_size == 1, f"cf. gaussian_diffusion.py: L579"
     data_len = len(data)
     # while img_cnt < data_len:
@@ -140,6 +141,10 @@ def main():
     #     print("Test sample ", img_cnt, "/", data_len)
     #
     #     b, label = next(data)  # should return an image from the dataloader "data"
+
+    num_imgs = 0
+
+    logger.log(f"Calculating GED and HM-Iou with N={args.num_ensemble} over {len_dataset} samples..")
 
     for idx, (b, label) in enumerate(data):
         # print("Test batch ", idx + 1, "/", data_len)
@@ -159,8 +164,6 @@ def main():
 
         start = th.cuda.Event(enable_timing=True)
         end = th.cuda.Event(enable_timing=True)
-
-        logger.log(f"Calculating GED and HM-Iou for N={args.num_ensemble} samples..")
 
         img = img.repeat_interleave(args.num_ensemble, dim=0)
 
@@ -197,17 +200,18 @@ def main():
         label = label
 
         ged = calc_batched_generalised_energy_distance(label.cpu().numpy(), predictions.cpu().numpy(), NUM_CLASSES)
-        geds.append(np.sum(ged))
+        geds += np.sum(ged)
 
         lcm = np.lcm(args.num_ensemble, label.shape[1])
         hm_labels = label.repeat_interleave(lcm // label.shape[1], dim=1).cpu().numpy()
         predictions = predictions.repeat_interleave(lcm // args.num_ensemble, dim=1).cpu().numpy()
         assert all([p in [0, 1] for p in np.unique(predictions)]), "predictions must contain all classes"
         hm_iou = batched_hungarian_matching(hm_labels, predictions, NUM_CLASSES)
-        hm_ious.append(np.sum(hm_iou))
-        print("Sample %d/%d | GED_%d: %.4g, HM-IoU_%d: %.4g" % (idx + 1, data_len, args.num_ensemble, np.sum(ged), args.num_ensemble, np.sum(hm_iou)))
+        hm_ious += np.sum(hm_iou)
+        num_imgs += b.shape[0]
+        print("Batch %d/%d (%d/%d) | GED_%d: %.4g, HM-IoU_%d: %.4g" % (idx + 1, data_len, num_imgs, len_dataset, args.num_ensemble, np.sum(ged), args.num_ensemble, np.sum(hm_iou)))
 
-    print("\n\nGED_%d: %.4g | HM-IoU_%d: %.4g" % (args.num_ensemble, np.mean(geds), args.num_ensemble, np.mean(hm_ious)))
+    print("\n\nGED_%d: %.4g | HM-IoU_%d: %.4g" % (args.num_ensemble, geds / len_dataset, args.num_ensemble, hm_ious / len_dataset))
 
 
 def create_argparser():
