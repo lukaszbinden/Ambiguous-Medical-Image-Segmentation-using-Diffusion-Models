@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 from scipy.optimize import linear_sum_assignment
 
 
@@ -56,3 +57,24 @@ def batched_hungarian_matching(samples_dist_0, samples_dist_1, num_classes):
 
     return h_scores
 
+
+def model_size(model, diffusion, prior, posterior, logger):
+    import torch.nn as nn
+    total_p = 0
+    if isinstance(model, nn.Module):
+        num_of_parameters = sum(map(torch.numel, model.parameters()))
+        total_p += num_of_parameters
+        logger.info("%s trainable params: %d" % ("model", num_of_parameters))
+    if isinstance(diffusion, nn.Module):
+        num_of_parameters = sum(map(torch.numel, diffusion.parameters()))
+        total_p += num_of_parameters
+        logger.info("%s trainable params: %d" % ("diffusion", num_of_parameters))
+    if isinstance(prior, nn.Module):
+        num_of_parameters = sum(map(torch.numel, prior.parameters()))
+        total_p += num_of_parameters
+        logger.info("%s trainable params: %d" % ("prior", num_of_parameters))
+    if isinstance(posterior, nn.Module):
+        num_of_parameters = sum(map(torch.numel, posterior.parameters()))
+        total_p += num_of_parameters
+        logger.info("%s trainable params: %d" % ("posterior", num_of_parameters))
+    logger.info("%s trainable params: %d" % ("CIMD", total_p))

@@ -19,6 +19,7 @@ from guided_diffusion.script_util import (
     args_to_dict,
     add_dict_to_argparser,
 )
+from scripts.metrics import model_size
 import torch as th
 from guided_diffusion.train_util import TrainLoop
 from visdom import Visdom
@@ -163,7 +164,7 @@ if __name__ == "__main__":
     dist_util.setup_dist()
 
     use_mose_dataset = True
-    use_dataset = "msmri"  # "msmri" or "lidc"
+    use_dataset = "lidc"  # "msmri" or "lidc"
 
     if use_mose_dataset:
         logger.configure(dir="./results/" + use_dataset)
@@ -176,6 +177,8 @@ if __name__ == "__main__":
     )
     model.to(dist_util.dev())
     schedule_sampler = create_named_schedule_sampler(args.schedule_sampler, diffusion,  maxt=1000)
+
+    model_size(model, diffusion, prior, posterior, logger)
 
     logger.log("creating data loader...")
 
@@ -200,6 +203,7 @@ if __name__ == "__main__":
             assert False, "unknown dataset"
 
     # ds.__getitem__(23)
+    logger.info("Arguments: %s" % args.__dict__)
 
     datal= th.utils.data.DataLoader(
         ds,

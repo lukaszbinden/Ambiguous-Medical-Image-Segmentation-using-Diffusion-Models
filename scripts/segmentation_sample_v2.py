@@ -21,7 +21,7 @@ from guided_diffusion import dist_util, logger
 from guided_diffusion.lidcloader import LIDCDataset
 from guided_diffusion.lidcloader_mose import lidc_Dataloader
 from guided_diffusion.msmri_dataset_mose import msmri_Dataloader
-from metrics import calc_batched_generalised_energy_distance, batched_hungarian_matching
+from metrics import calc_batched_generalised_energy_distance, batched_hungarian_matching, model_size
 from guided_diffusion.script_util import (
     NUM_CLASSES,
     model_and_diffusion_defaults,
@@ -78,6 +78,8 @@ def main():
     model, diffusion, prior, posterior = create_model_and_diffusion(
         **args_to_dict(args, model_and_diffusion_defaults().keys())
     )
+
+    model_size(model, diffusion, prior, posterior, logger)
 
     # torch.cuda.set_device(args.local_rank)
 
@@ -209,7 +211,8 @@ def main():
         hm_iou = batched_hungarian_matching(hm_labels, predictions, NUM_CLASSES)
         hm_ious += np.sum(hm_iou)
         num_imgs += b.shape[0]
-        print("Batch %d/%d (%d/%d) | GED_%d: %.4g, HM-IoU_%d: %.4g" % (idx + 1, data_len, num_imgs, len_dataset, args.num_ensemble, np.sum(ged), args.num_ensemble, np.sum(hm_iou)))
+        print("Batch %d/%d (%d/%d) | GED_%d: %.4g, HM-IoU_%d: %.4g" % (
+        idx + 1, data_len, num_imgs, len_dataset, args.num_ensemble, np.sum(ged), args.num_ensemble, np.sum(hm_iou)))
 
     print("\n\nGED_%d: %.4g | HM-IoU_%d: %.4g" % (args.num_ensemble, geds / len_dataset, args.num_ensemble, hm_ious / len_dataset))
 
