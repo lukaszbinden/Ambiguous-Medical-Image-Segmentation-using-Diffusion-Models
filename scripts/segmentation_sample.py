@@ -140,7 +140,7 @@ def main():
     #     b, label = next(data)  # should return an image from the dataloader "data"
 
     for idx, (b, label) in enumerate(data):
-        print("Test batch ", idx + 1, "/", data_len)
+        # print("Test batch ", idx + 1, "/", data_len)
 
         c = th.randn_like(b[:, :1, ...])
         img = th.cat((b, c), dim=1)  # add a noise channel$
@@ -153,10 +153,12 @@ def main():
         # viz.image(visualize(img[0, 3, ...]), opts=dict(caption="img input3"))
         # viz.image(visualize(img[0, 4, ...]), opts=dict(caption="noise"))
 
-        logger.log("sampling...")
+        # logger.log("sampling...")
 
         start = th.cuda.Event(enable_timing=True)
         end = th.cuda.Event(enable_timing=True)
+
+        logger.log(f"Calculating GED and HM-Iou for N={args.num_ensemble} samples..")
 
         predictions = []
         for i in range(args.num_ensemble):  # this is for the generation of an ensemble of 5 masks.
@@ -201,9 +203,9 @@ def main():
         assert all([p in [0, 1] for p in np.unique(predictions)]), "predictions must contain all classes"
         hm_iou = batched_hungarian_matching(hm_labels, predictions, NUM_CLASSES)
         hm_ious.append(np.sum(hm_iou))
-        print("sample %d/%d GED_%d: %.4g, HM-IoU_%d: %.4g" % (idx + 1, data_len, args.num_ensemble, np.sum(ged), args.num_ensemble, np.sum(hm_iou)))
+        print("Sample %d/%d | GED_%d: %.4g, HM-IoU_%d: %.4g" % (idx + 1, data_len, args.num_ensemble, np.sum(ged), args.num_ensemble, np.sum(hm_iou)))
 
-    print("Final GED_%d: %.4g | HM-IoU_%d: %.4g" % (args.num_ensemble, np.mean(geds), args.num_ensemble, np.mean(hm_ious)))
+    print("\n\nGED_%d: %.4g | HM-IoU_%d: %.4g" % (args.num_ensemble, np.mean(geds), args.num_ensemble, np.mean(hm_ious)))
 
 
 def create_argparser():
