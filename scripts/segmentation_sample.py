@@ -12,16 +12,16 @@ import nibabel as nib
 import sys
 import random
 
-from metrics import calc_batched_generalised_energy_distance
-
 sys.path.append(".")
 import numpy as np
 import time
 import torch as th
 import torch.distributed as dist
 from guided_diffusion import dist_util, logger
-# from guided_diffusion.bratsloader import BRATSDataset
 from guided_diffusion.lidcloader import LIDCDataset
+from guided_diffusion.lidcloader_mose import lidc_Dataloader
+from guided_diffusion.msmri_dataset_mose import msmri_Dataloader
+from metrics import calc_batched_generalised_energy_distance, batched_hungarian_matching
 from guided_diffusion.script_util import (
     NUM_CLASSES,
     model_and_diffusion_defaults,
@@ -65,7 +65,14 @@ def main():
     # rank=args.local_rank,)
 
     dist_util.setup_dist()
-    logger.configure()
+
+    use_mose_dataset = True
+    use_dataset = "lidc"  # "msmri" or "lidc"
+
+    if use_mose_dataset:
+        logger.configure(dir="./results/" + use_dataset)
+    else:
+        logger.configure()
 
     logger.log("creating model and diffusion...")
     model, diffusion, prior, posterior = create_model_and_diffusion(
@@ -82,7 +89,25 @@ def main():
     # output_device=args.local_rank,
     # )
 
-    ds = LIDCDataset(args.data_dir, test_flag=True)
+    if not use_mose_dataset:
+        ds = LIDCDataset(args.data_dir, test_flag=True)
+    else:
+        if use_dataset == "lidc":
+            ds = lidc_Dataloader(
+                # data_folder="/storage/homefs/lz20w714/git/mose-auseg/data/lidc_npy",
+                data_folder="/home/lukas/git/mose-auseg/data/lidc_npy",
+                transform_train=None,
+                transform_test=None
+            ).test_ds
+        elif use_dataset == "msmri":
+            ds = msmri_Dataloader(
+                data_folder="/storage/homefs/lz20w714/git/mose-auseg/data/msmri_npy",
+                # data_folder="/home/lukas/git/mose-auseg/data/msmri_npy",
+                transform_train=None,
+                transform_test=None
+            ).test_ds
+        else:
+            assert False, "unknown dataset"
 
     # sampler = torch.utils.data.distributed.DistributedSampler(
     # ds,
@@ -92,8 +117,7 @@ def main():
 
     datal = th.utils.data.DataLoader(
         ds,
-        batch_size=1,
-        # sampler = sampler,
+        batch_size=args.batch_size,
         shuffle=False)
     data = iter(datal)
     all_images = []
@@ -106,13 +130,18 @@ def main():
     model.eval()
     img_cnt = 0
     geds = []
-    assert args.batch_size == 1
+    hm_ious = []
+    assert args.batch_size == 1, f"cf. gaussian_diffusion.py: L579"
     data_len = len(data)
-    while img_cnt < data_len:
-        img_cnt += 1
-        print("Test sample ", img_cnt, "/", data_len)
+    # while img_cnt < data_len:
+    #     img_cnt += 1
+    #     print("Test sample ", img_cnt, "/", data_len)
+    #
+    #     b, label = next(data)  # should return an image from the dataloader "data"
 
-        b, label = next(data)  # should return an image from the dataloader "data"
+    for idx, (b, label) in enumerate(data):
+        print("Test batch ", idx + 1, "/", data_len)
+
         c = th.randn_like(b[:, :1, ...])
         img = th.cat((b, c), dim=1)  # add a noise channel$
         # slice_ID = path[0].split("/", -1)[3]
@@ -148,6 +177,12 @@ def main():
             th.cuda.synchronize()
             # print('time for 1 sample', start.elapsed_time(end))  # time measurement for the generation of 1 sample
 
+            # normalize sample to range [0,1]:
+            sample = (sample - sample.min()) / (sample.max() - sample.min())
+
+            # WOLLEB: This mask is thresholded at 0.5 to obtain a binary segmentation
+            sample = th.where(sample > 0.5, th.ones_like(sample), th.zeros_like(sample))
+
             predictions.append(sample)
 
             # s = th.tensor(sample)
@@ -158,10 +193,17 @@ def main():
         label = label
 
         ged = calc_batched_generalised_energy_distance(label.cpu().numpy(), predictions.cpu().numpy(), NUM_CLASSES)
-        print("sample %d/%d GED_%d: %.4g" % (img_cnt, data_len, args.num_ensemble, np.sum(ged)))
         geds.append(np.sum(ged))
 
-    print("GED_%d: %.4g" % (args.num_ensemble, np.mean(geds)))
+        lcm = np.lcm(args.num_ensemble, label.shape[1])
+        hm_labels = label.repeat_interleave(lcm // label.shape[1], dim=1).cpu().numpy()
+        predictions = predictions.repeat_interleave(lcm // args.num_ensemble, dim=1).cpu().numpy()
+        assert all([p in [0, 1] for p in np.unique(predictions)]), "predictions must contain all classes"
+        hm_iou = batched_hungarian_matching(hm_labels, predictions, NUM_CLASSES)
+        hm_ious.append(np.sum(hm_iou))
+        print("sample %d/%d GED_%d: %.4g, HM-IoU_%d: %.4g" % (idx + 1, data_len, args.num_ensemble, np.sum(ged), args.num_ensemble, np.sum(hm_iou)))
+
+    print("Final GED_%d: %.4g | HM-IoU_%d: %.4g" % (args.num_ensemble, np.mean(geds), args.num_ensemble, np.mean(hm_ious)))
 
 
 def create_argparser():

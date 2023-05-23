@@ -10,11 +10,11 @@ import torch
 class lidc_Dataloader():
     def __init__(self, data_folder, transform_train, transform_test, label_range='all'):
         self.train_ds = lidc_Dataset(os.path.join(data_folder, 'train')
-                                     , transform_train, label_range)
+                                     , transform_train, label_range, test_flag=False)
         # self.val_ds = lidc_Dataset(os.path.join(exp_config.data_folder, 'val'),
         #                                  exp_config.transform['val'])
         self.test_ds = lidc_Dataset(os.path.join(data_folder, 'test'),
-                                    transform_test)
+                                    transform_test, test_flag=True)
 
         # self.train = DataLoader(self.train_ds, shuffle=True, batch_size=exp_config.train_batch_size,
         #                         drop_last=True, pin_memory=True, num_workers=exp_config.num_w)
@@ -27,12 +27,13 @@ class lidc_Dataloader():
 
 
 class lidc_Dataset(Dataset):
-    def __init__(self, data_file, transform=None, label_range='all'):
+    def __init__(self, data_file, transform=None, label_range='all', test_flag=False):
 
         self.img_file = sorted((Path(data_file) / 'images').iterdir())
         self.label_file = sorted((Path(data_file) / 'labels').iterdir())
         self.transform = transform
         self.label_range = label_range
+        self.test_flag = test_flag
         if self.label_range != 'all':
             print(label_range)
 
@@ -56,8 +57,12 @@ class lidc_Dataset(Dataset):
         image = torch.cat((image, image, image, image), 0)
         x = image
 
-        y = y[random.randint(0, 3)]
-        y = torch.unsqueeze(torch.tensor(y), 0)
+        if self.test_flag:
+            # use full y masks for testing
+            y = torch.tensor(y)
+        else:
+            y = y[random.randint(0, 3)]
+            y = torch.unsqueeze(torch.tensor(y), 0)
 
         sample = {
             'image': x,
