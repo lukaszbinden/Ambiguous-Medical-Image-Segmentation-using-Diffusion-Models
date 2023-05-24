@@ -4,6 +4,7 @@ Train a diffusion model on images.
 import sys
 import os
 import argparse
+import numpy as np
 
 sys.path.append("..")
 sys.path.append(".")
@@ -22,10 +23,13 @@ from guided_diffusion.script_util import (
 )
 from scripts.metrics import model_size
 import torch as th
+from torch import nn
 import ignite.distributed as idist
 from guided_diffusion.train_util import TrainLoop
 from visdom import Visdom
+
 viz = Visdom(port=8097)
+
 
 # def main():"""
 # Train a diffusion model on images.
@@ -149,7 +153,7 @@ def create_argparser():
         ema_rate="0.9999",  # comma-separated list of EMA values
         log_interval=100,
         save_interval=5000,
-        resume_checkpoint='',#'"./results/pretrainedmodel.pt",
+        resume_checkpoint='',  # '"./results/pretrainedmodel.pt",
         use_fp16=False,
         fp16_scale_growth=1e-3,
     )
@@ -159,6 +163,12 @@ def create_argparser():
     parser.add_argument('--ngpu', type=int, default=2)
     add_dict_to_argparser(parser, defaults)
     return parser
+
+
+def worker_init_fn(_):
+    # used for seeding dataloader workers in case mp_loader > 1
+    # ensures numpy's randomness across epochs
+    np.random.seed(th.initial_seed() % 2 ** 32)
 
 
 def run_train(local_rank: int, args):
@@ -179,7 +189,15 @@ def run_train(local_rank: int, args):
     model, diffusion, prior, posterior = create_model_and_diffusion(
         **args_to_dict(args, model_and_diffusion_defaults().keys())
     )
-    model.to(dist_util.dev())
+    model.to(idist.device())
+    model = th.nn.SyncBatchNorm.convert_sync_batchnorm(model)
+
+    local_rank = idist.get_local_rank()
+    model = nn.parallel.DistributedDataParallel(model, device_ids=[local_rank])
+
+    prior.to(idist.device())
+    posterior.to(idist.device())
+
     schedule_sampler = create_named_schedule_sampler(args.schedule_sampler, diffusion, maxt=1000)
 
     model_size(model, diffusion, prior, posterior, logger)
@@ -207,12 +225,23 @@ def run_train(local_rank: int, args):
             assert False, "unknown dataset"
 
     # ds.__getitem__(23)
-    logger.info("Arguments: %s" % args.__dict__)
+    logger.info("rank %d | Arguments: %s" % (idist.get_local_rank(), args.__dict__))
+
+    train_sampler = th.utils.data.distributed.DistributedSampler(ds,
+                                                                 rank=idist.get_local_rank(),
+                                                                 num_replicas=args.ngpu)
+    batch_size = args.batch_size // args.ngpu  # batch_size of each process
 
     datal = th.utils.data.DataLoader(
         ds,
-        batch_size=args.batch_size,
-        shuffle=True)
+        batch_size=batch_size,
+        drop_last=True,
+        pin_memory=True,
+        sampler=train_sampler,
+        shuffle=train_sampler is None,
+        num_workers=args.mp_loaders,
+        worker_init_fn=worker_init_fn
+    )
     data = iter(datal)
 
     logger.log("training...")
@@ -237,7 +266,6 @@ def run_train(local_rank: int, args):
         weight_decay=args.weight_decay,
         lr_anneal_steps=args.lr_anneal_steps,
     ).run_loop()
-
 
 
 if __name__ == "__main__":
@@ -267,7 +295,8 @@ def create_argparser():
         ema_rate="0.9999",  # comma-separated list of EMA values
         log_interval=100,
         save_interval=5000,
-        resume_checkpoint='',#'"./results/pretrainedmodel.pt",
+        mp_loaders=4,
+        resume_checkpoint='',  # '"./results/pretrainedmodel.pt",
         use_fp16=False,
         fp16_scale_growth=1e-3,
     )
@@ -275,7 +304,6 @@ def create_argparser():
     parser = argparse.ArgumentParser()
     add_dict_to_argparser(parser, defaults)
     return parser
-
 
 # if __name__ == "__main__":
 #     main()
