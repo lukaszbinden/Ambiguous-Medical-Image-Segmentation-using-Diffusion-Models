@@ -221,10 +221,10 @@ def main():
         hm_iou = batched_hungarian_matching(hm_labels, predictions, NUM_CLASSES)
         hm_ious += np.sum(hm_iou)
         num_imgs += b.shape[0]
-        logger.info("Batch %d/%d (%d/%d) | GED_%d: %.4g, HM-IoU_%d: %.4g" % (
+        logger.info("%s | Batch %d/%d (%d/%d) | GED_%d: %.4g, HM-IoU_%d: %.4g" % (time.strftime("%Y-%m-%d %H:%M:%S"),
         idx + 1, data_len, num_imgs, len_dataset, args.num_ensemble, np.sum(ged) / predictions.shape[0], args.num_ensemble, np.sum(hm_iou) / predictions.shape[0]))
 
-    logger.info("\n\nGED_%d: %.4g | HM-IoU_%d: %.4g" % (args.num_ensemble, geds / len_dataset, args.num_ensemble, hm_ious / len_dataset))
+    logger.info("\n\n%s | GED_%d: %.4g, HM-IoU_%d: %.4g" % (time.strftime("%Y-%m-%d %H:%M:%S"), args.num_ensemble, geds / len_dataset, args.num_ensemble, hm_ious / len_dataset))
 
 
 def create_argparser():
