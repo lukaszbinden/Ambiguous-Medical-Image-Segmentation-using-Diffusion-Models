@@ -153,6 +153,7 @@ def create_argparser():
         ema_rate="0.9999",  # comma-separated list of EMA values
         log_interval=100,
         save_interval=5000,
+        mp_loaders=4,
         resume_checkpoint='',  # '"./results/pretrainedmodel.pt",
         use_fp16=False,
         fp16_scale_growth=1e-3,
@@ -283,27 +284,27 @@ if __name__ == "__main__":
         parallel.run(run_train, args)
 
 
-def create_argparser():
-    defaults = dict(
-        data_dir="./data/training",
-        schedule_sampler="uniform",
-        lr=1e-4,
-        weight_decay=0.0,
-        lr_anneal_steps=0,
-        batch_size=1,
-        microbatch=-1,  # -1 disables microbatches
-        ema_rate="0.9999",  # comma-separated list of EMA values
-        log_interval=100,
-        save_interval=5000,
-        mp_loaders=4,
-        resume_checkpoint='',  # '"./results/pretrainedmodel.pt",
-        use_fp16=False,
-        fp16_scale_growth=1e-3,
-    )
-    defaults.update(model_and_diffusion_defaults())
-    parser = argparse.ArgumentParser()
-    add_dict_to_argparser(parser, defaults)
-    return parser
+# def create_argparser():
+#     defaults = dict(
+#         data_dir="./data/training",
+#         schedule_sampler="uniform",
+#         lr=1e-4,
+#         weight_decay=0.0,
+#         lr_anneal_steps=0,
+#         batch_size=1,
+#         microbatch=-1,  # -1 disables microbatches
+#         ema_rate="0.9999",  # comma-separated list of EMA values
+#         log_interval=100,
+#         save_interval=5000,
+#         mp_loaders=4,
+#         resume_checkpoint='',  # '"./results/pretrainedmodel.pt",
+#         use_fp16=False,
+#         fp16_scale_growth=1e-3,
+#     )
+#     defaults.update(model_and_diffusion_defaults())
+#     parser = argparse.ArgumentParser()
+#     add_dict_to_argparser(parser, defaults)
+#     return parser
 
 # if __name__ == "__main__":
 #     main()
