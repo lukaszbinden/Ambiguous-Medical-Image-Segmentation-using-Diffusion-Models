@@ -2,6 +2,7 @@ import copy
 import functools
 import os
 import blobfile as bf
+import time
 import torch as th
 import torch.distributed as dist
 from torch.nn.parallel.distributed import DistributedDataParallel as DDP
@@ -200,6 +201,7 @@ class TrainLoop:
 
 
             if self.step % self.log_interval == 0:
+                logger.info("Time: {}".format(time.strftime("%Y-%m-%d %H:%M:%S")))
                 logger.dumpkvs()
             if self.step % self.save_interval == 0:
                 self.save()
