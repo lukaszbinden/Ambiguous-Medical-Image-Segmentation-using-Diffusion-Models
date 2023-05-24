@@ -103,12 +103,12 @@ def main():
     else:
         if use_dataset == "lidc":
             ds = lidc_Dataloader(
-                # data_folder="/storage/homefs/lz20w714/git/mose-auseg/data/lidc_npy",
-                data_folder="/home/lukas/git/mose-auseg/data/lidc_npy",
+                data_folder="/storage/homefs/lz20w714/git/mose-auseg/data/lidc_npy",
+                # data_folder="/home/lukas/git/mose-auseg/data/lidc_npy",
                 transform_train=None,
                 transform_test=None
             ).val_ds
-            max_size = 5
+            max_size = 64 
             ds, _ = th.utils.data.random_split(ds, [max_size, len(ds) - max_size],
                                                generator=torch.Generator().manual_seed(1))
 
