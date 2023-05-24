@@ -108,6 +108,9 @@ def main():
                 transform_train=None,
                 transform_test=None
             ).test_ds
+            # from torch.utils.data.dataset import Subset
+            # ds = Subset(ds, [6, 8, 9, 13, 14, 15, 16])
+
         elif use_dataset == "msmri":
             ds = msmri_Dataloader(
                 data_folder="/storage/homefs/lz20w714/git/mose-auseg/data/msmri_npy",
@@ -185,7 +188,7 @@ def main():
 
         sample, x_noisy, org = sample_fn(
             model,
-            (args.batch_size * args.num_ensemble, -1, args.image_size, args.image_size), img,
+            (b.shape[0] * args.num_ensemble, -1, args.image_size, args.image_size), img,
             clip_denoised=args.clip_denoised,
             model_kwargs=model_kwargs,
         )
@@ -218,7 +221,8 @@ def main():
         hm_iou = batched_hungarian_matching(hm_labels, predictions, NUM_CLASSES)
         hm_ious += np.sum(hm_iou)
         num_imgs += b.shape[0]
-        logger.info("Batch %d/%d (%d/%d) | GED_%d: %.4g, HM-IoU_%d: %.4g" % (idx + 1, data_len, num_imgs, len_dataset, args.num_ensemble, np.sum(ged), args.num_ensemble, np.sum(hm_iou)))
+        logger.info("Batch %d/%d (%d/%d) | GED_%d: %.4g, HM-IoU_%d: %.4g" % (
+        idx + 1, data_len, num_imgs, len_dataset, args.num_ensemble, np.sum(ged) / predictions.shape[0], args.num_ensemble, np.sum(hm_iou) / predictions.shape[0]))
 
     logger.info("\n\nGED_%d: %.4g | HM-IoU_%d: %.4g" % (args.num_ensemble, geds / len_dataset, args.num_ensemble, hm_ious / len_dataset))
 
