@@ -10,8 +10,8 @@ from torchvision.utils import save_image
 import torch
 import random
 import math
-from visdom import Visdom
-viz = Visdom(port=8097)
+# from visdom import Visdom
+# viz = Visdom(port=8097)
 import numpy as np
 import torch as th
 from .train_util import visualize

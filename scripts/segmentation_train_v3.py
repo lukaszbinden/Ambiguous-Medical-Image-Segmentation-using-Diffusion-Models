@@ -26,9 +26,9 @@ import torch as th
 from torch import nn
 import ignite.distributed as idist
 from guided_diffusion.train_util import TrainLoop
-from visdom import Visdom
+# from visdom import Visdom
 
-viz = Visdom(port=8097)
+# viz = Visdom(port=8097)
 
 
 # def main():"""
