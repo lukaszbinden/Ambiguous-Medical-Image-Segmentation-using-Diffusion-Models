@@ -11,8 +11,8 @@ class lidc_Dataloader():
     def __init__(self, data_folder, transform_train, transform_test, label_range='all'):
         self.train_ds = lidc_Dataset(os.path.join(data_folder, 'train')
                                      , transform_train, label_range, test_flag=False)
-        # self.val_ds = lidc_Dataset(os.path.join(exp_config.data_folder, 'val'),
-        #                                  exp_config.transform['val'])
+        self.val_ds = lidc_Dataset(os.path.join(data_folder, 'val'),
+                                   transform=None, test_flag=True)
         self.test_ds = lidc_Dataset(os.path.join(data_folder, 'test'),
                                     transform_test, test_flag=True)
 
