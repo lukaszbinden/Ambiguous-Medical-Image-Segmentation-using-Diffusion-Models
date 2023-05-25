@@ -110,14 +110,19 @@ class TrainLoop:
 
         if th.cuda.is_available():
             self.use_ddp = True
-            self.ddp_model = DDP(
-                self.model,
-                device_ids=[dist_util.dev()],
-                output_device=dist_util.dev(),
-                broadcast_buffers=False,
-                bucket_cap_mb=128,
-                find_unused_parameters=False,
-            )
+            if isinstance(self.model, th.nn.DataParallel):
+                self.ddp_model = self.model
+            if isinstance(self.model, th.nn.parallel.DistributedDataParallel):
+                self.ddp_model = self.model
+            else:
+                self.ddp_model = DDP(
+                    self.model,
+                    device_ids=[dist_util.dev()],
+                    output_device=dist_util.dev(),
+                    broadcast_buffers=False,
+                    bucket_cap_mb=128,
+                    find_unused_parameters=False,
+                )
         else:
             if dist.get_world_size() > 1:
                 logger.warn(
