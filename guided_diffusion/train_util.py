@@ -81,7 +81,10 @@ class TrainLoop:
 
         self.step = 0
         self.resume_step = 0
-        self.global_batch = self.batch_size * dist.get_world_size()
+        if isinstance(self.model, th.nn.DataParallel):
+            self.global_batch = self.batch_size
+        else:
+            self.global_batch = self.batch_size * dist.get_world_size()
 
         self.sync_cuda = th.cuda.is_available()
 
