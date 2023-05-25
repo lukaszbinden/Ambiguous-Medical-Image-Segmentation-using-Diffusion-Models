@@ -115,7 +115,7 @@ class TrainLoop:
             self.use_ddp = True
             if isinstance(self.model, th.nn.DataParallel):
                 self.ddp_model = self.model
-            if isinstance(self.model, th.nn.parallel.DistributedDataParallel):
+            elif isinstance(self.model, th.nn.parallel.DistributedDataParallel):
                 self.ddp_model = self.model
             else:
                 self.ddp_model = DDP(

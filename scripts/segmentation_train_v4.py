@@ -173,7 +173,7 @@ def worker_init_fn(_):
 
 
 def run_train(local_rank: int, args):
-    # dist_util.setup_dist()
+    dist_util.setup_dist()
 
     use_mose_dataset = True
     use_dataset = "lidc"  # "msmri" or "lidc"
