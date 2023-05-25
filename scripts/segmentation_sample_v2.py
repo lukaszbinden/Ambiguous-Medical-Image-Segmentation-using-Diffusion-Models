@@ -136,9 +136,11 @@ def main():
     len_dataset = len(ds)
     data = iter(datal)
     all_images = []
-    model.load_state_dict(
-        dist_util.load_state_dict(args.model_path, map_location="cpu")
-    )
+    state_dict = dist_util.load_state_dict(args.model_path, map_location="cpu")
+    if "train_2023-05-24-16-53-06" in args.model_path:
+        state_dict = {k.replace("module.", ""): v for k, v in state_dict.items()}
+    model.load_state_dict(state_dict)
+
     model.to(dist_util.dev())
     if args.use_fp16:
         model.convert_to_fp16()
