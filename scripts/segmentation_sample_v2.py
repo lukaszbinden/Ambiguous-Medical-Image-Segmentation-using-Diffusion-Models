@@ -106,7 +106,9 @@ def main():
                 data_folder="/storage/homefs/lz20w714/git/mose-auseg/data/lidc_npy",
                 # data_folder="/home/lukas/git/mose-auseg/data/lidc_npy",
                 transform_train=None,
-                transform_test=None
+                transform_test=None,
+                from_index=int(args.from_index) if args.from_index else None,
+                to_index=int(args.to_index) if args.to_index else None,
             ).test_ds
             # from torch.utils.data.dataset import Subset
             # ds = Subset(ds, [6, 8, 9, 13, 14, 15, 16])
@@ -134,6 +136,7 @@ def main():
         batch_size=args.batch_size,
         shuffle=False)
     len_dataset = len(ds)
+    logger.info("Dataset length: %d, from_index: %s, to_index: %s" % (len_dataset, args.from_index, args.to_index))
     data = iter(datal)
     all_images = []
     state_dict = dist_util.load_state_dict(args.model_path, map_location="cpu")
@@ -227,6 +230,10 @@ def main():
         idx + 1, data_len, num_imgs, len_dataset, args.num_ensemble, np.sum(ged) / predictions.shape[0], args.num_ensemble, np.sum(hm_iou) / predictions.shape[0]))
 
     logger.info("\n\n%s | GED_%d: %.4g, HM-IoU_%d: %.4g" % (time.strftime("%Y-%m-%d %H:%M:%S"), args.num_ensemble, geds / len_dataset, args.num_ensemble, hm_ious / len_dataset))
+    logger.info("GED:")
+    logger.info(geds)
+    logger.info("HM-IoUs:")
+    logger.info(hm_ious)
 
 
 def create_argparser():
@@ -237,7 +244,9 @@ def create_argparser():
         batch_size=1,
         use_ddim=False,
         model_path="",
-        num_ensemble=4  # number of samples in the ensemble
+        num_ensemble=4,  # number of samples in the ensemble
+        from_index=None,
+        to_index=None
     )
     defaults.update(model_and_diffusion_defaults())
     parser = argparse.ArgumentParser()
